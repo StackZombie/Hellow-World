@@ -1,0 +1,96 @@
+from bs4 import BeautifulSoup
+import requests
+
+
+def surfMovie(crawlObj):
+        counter=0
+        movieLinks=[]
+        for dtag in crawlObj.find_all("div",class_="row"):
+            for ulClass in dtag.find_all("ul",class_="visual-list movie-list"):
+               for liClass in ulClass.find_all("li",class_="visual-item"):
+                    for atags in liClass.find_all("a",class_="visual-title dark"):
+                        if counter==8:
+                            return movieLinks
+                        movieLinks.append(atags['href'])
+                        counter+=1
+
+                        
+def getAttr(attr_url):
+    counter=0
+    import random
+    attr=[]
+    r  = requests.get(attr_url)
+    data = r.text
+    soup = BeautifulSoup(data,'lxml') 
+    for iter_k in soup.find_all("div",class_="row"):
+        for further in iter_k.find_all("ul",class_="cast-crew-list"):
+             for iterv in further.find_all("li",class_="cast-crew-item"):
+                for Dtag in iterv.find_all("div",class_="cast-crew-name half-width"):
+                    for atag in Dtag.find_all("a"):
+                        if counter==5:
+                            num=random.randint(1,20)
+                            if(num%2==0):
+                                attr.append("Crime")
+                                attr.append("Thriller")
+                            else:
+                                attr.append("Thriller")
+                                attr.append("Crime")
+                            return attr 
+                        else:
+                            attr.append(atag.text)
+                            counter+=1
+                    
+    
+                       
+                        
+def mapMovie_fo(genreList):
+    nameUrl=""
+    key=""
+    names=[]
+    title_dict={}
+    for movieLink in genreList:
+        r  = requests.get(movieLink)
+        data = r.text
+        soup = BeautifulSoup(data,'lxml')           
+        for  itr in soup.find_all("div",class_="site-wrap"): 
+            for dtag in itr.find_all("div",class_="page"):
+                key=dtag.h1.a.text
+                for secT in dtag.find_all("section",class_="cast-crew-section row"):
+                    for dtag in secT.find_all("div",class_="large-12 columns"):
+                        for atag in dtag.find_all("a",class_="cta visual-list-see-more"):
+                            title_dict[key]=getAttr(atag['href'])
+                            
+                            
+                        
+                                
+    return title_dict                                                             
+    
+                                     
+                                       
+                                        
+                           
+        
+        
+############################## controlP################################
+
+
+genreLinks=[]
+movieLinks=[]
+genreLinks.append("http://www.fandango.com/moviesintheaters?GenreFilter=Action%2FAdventure")
+genreLinks.append("http://www.fandango.com/moviesintheaters?GenreFilter=Drama")
+
+for i in range (len(genreLinks)):
+    r  = requests.get(genreLinks[i])
+    data = r.text
+    soup = BeautifulSoup(data,'lxml')
+    movieLinks.append(surfMovie(soup))
+    
+fullDict={}
+for i in range (len(movieLinks)):
+    if(i==0):
+        fullDict['action']=mapMovie_fo(movieLinks[i])
+    else:    
+        fullDict['drama']=mapMovie_fo(movieLinks[i])
+        
+##############################FINAL_PRODUCT############
+print(fullDict)        
