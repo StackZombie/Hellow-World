@@ -1,0 +1,103 @@
+#This is the file that contains a crawlled and organized code of MovieFone.com
+from bs4 import BeautifulSoup
+import requests
+
+
+def getLinksOfMovies(path):
+    r  = requests.get(path)
+    data = r.text
+    soup = BeautifulSoup(data,"lxml")
+    actionLinks=[]
+    for atag in soup.find_all( "div",class_="movie-module poster-grid-module"):
+        for link in atag.find_all("a",class_="button blue"):
+                actionLinks.append(link['href'])
+    return actionLinks
+
+def purifyLinks(collection):
+    ls=[]
+    i=0
+    while(i<=len(collection)-1):
+        str=collection[i]
+        str="https://www.moviefone.com"+str
+        ls.append(str)
+        i+=2
+    return ls    
+
+#this function will returned the prepared title based dictionary to the generae
+def crawlFromlist(movLink):
+    titleDictionary=dict()
+    ls=list()
+    for i in range(len(movLink)):
+        r1=requests.get(movLink[i])
+        data=r1.text
+        soup=BeautifulSoup(data,"lxml")
+        for link in soup.find_all("div",class_="details"):
+              for h1 in link.find_all('h1'):
+                    key=h1.text
+                    key.strip().split()
+              for detail in soup.find_all('div',class_="clear-fix container"):
+                for more in detail.find_all('div',class_="text"):
+                    for ptag in more.find_all('a'):
+                       ls.append(ptag.get_text())
+                    titleDictionary[key]=ls
+    return titleDictionary
+def searchMovie(fullDict):
+    srch_ttl=input("\nEnter the movie to be searched: ")
+    for genre in fullDict:
+        for title in fullDict[genre]:
+            if(title==srch_ttl):
+                print("\n\nTitle:\n--------------------") 
+                print(title)
+                print("\nCast:\n--------------------")
+                flag=1
+                for attr in fullDict[genre][title]:
+                    if flag==1 and (attr=="Action" or attr=="Crime"or attr=="Thriller" or attr=="Drama" or attr=="Adventure"):
+                        print("\nSub-Genre:\n--------------------")
+                        flag=0
+                    print(attr)
+                print("\n\n")    
+                return
+    
+    
+    
+    
+def SearchGenrae(genreDict):
+    for key in genreDict:
+        flag=1
+        flag2=1
+        print("\n\nTitle:\n--------------------")        
+        print(key)
+        print("\nCasting::\n--------------------")
+        for attr in genreDict[key]:
+            if flag==1 and (attr=="Action" or attr=="Crime"or attr=="Thriller" or attr=="Drama" or attr=="Adventure"):
+                print("\nSub-Genre:\n--------------------")
+                flag=0
+            print(attr)
+        print('\n') 
+
+        
+#main actual begining of the code
+genrae=list()
+movieFone=dict()
+genrae.append("https://www.moviefone.com/movies/2017/action/")
+genrae.append("https://www.moviefone.com/movies/2017/crime/")
+genrae.append("https://www.moviefone.com/movies/2017/horror/")
+genrae.append("https://www.moviefone.com/movies/2017/drama/")
+ln=list()
+
+for i in range(len(genrae)-1):
+    ln=purifyLinks(getLinksOfMovies(genrae[i]))
+    tdictionary=crawlFromlist(ln)
+    if i==0 :
+         movieFone['action']=tdictionary    
+    elif i==1 :
+        movieFone['crime']=tdictionary
+    elif i==2 :
+        movieFone['horror']=tdictionary
+    elif i==3 :
+        movieFone['drama']=tdictionary
+
+dictionary of dictionary has been prepared
+
+SearchGenrae(movieFone['crime'])
+print("Hellow World")
